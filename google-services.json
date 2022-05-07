@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "53430893018",
+    "project_id": "booknojiljoo",
+    "storage_bucket": "booknojiljoo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:53430893018:android:d4fd3d02e515e3896a28e3",
+        "android_client_info": {
+          "package_name": "com.example.final_project_booking"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "53430893018-5497nikph58f9e94103m0tjl5tn9eria.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQc6k9qQ-rwM1MAXU_605JacNKghpDbDQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "53430893018-5497nikph58f9e94103m0tjl5tn9eria.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
