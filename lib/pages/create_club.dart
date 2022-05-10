@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:booknoejilju/pages/Splash.dart';
 import 'package:booknoejilju/services/auth_service.dart';
 import 'package:booknoejilju/services/bookclub_service.dart';
 import 'package:flutter/cupertino.dart';
@@ -60,7 +63,7 @@ class _CreateClubState extends State<CreateClub> {
                       'bookname',
                       user.uid,
                       'clubrule',
-                      'goaldate',
+                      '목표달성일을\n설정해보세요    ',
                       'totalpages',
                       'todaygoal',
                     );
@@ -72,12 +75,19 @@ class _CreateClubState extends State<CreateClub> {
                     //User collection에서 leader의 uid부분 update
                     clubService.updateleaderdocId(user.uid, await id);
 
+                    //authservice에 default 변수 저장시키기
+                    authService.goaldate = '목표달성일을\n설정해보세요    ';
+                    authService.docId = await id;
+
+                    authService.todaygoal = '페이지 입력';
+                    authService.totalpage = '페이지 입력';
+                    authService.uid = user.uid;
+
                     // LobbyPage로 이동
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => LobbyPage(),
-                        //create function
                       ),
                     );
                   },

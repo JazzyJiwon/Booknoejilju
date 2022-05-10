@@ -1,5 +1,5 @@
-import 'package:booknoejilju/pages/bookclub_rule.dart';
-import 'package:booknoejilju/pages/read_page.dart';
+import 'package:booknoejilju/services/auth_service.dart';
+import 'package:booknoejilju/services/bookclub_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
@@ -12,22 +12,10 @@ import 'package:intl/intl.dart';
 import 'Entrance.dart';
 import 'LoginPage.dart';
 import 'Splash.dart';
-import '../services/auth_service.dart';
-import '../services/bookclub_service.dart';
 
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized(); // main 함수에서 async 사용하기 위함
-//   await Firebase.initializeApp(); // firebase 앱 시작
-//   runApp(
-//     MultiProvider(
-//       providers: [
-//         ChangeNotifierProvider(create: (context) => AuthService()),
-//         ChangeNotifierProvider(create: (context) => ClubService()),
-//       ],
-//       child: Lobby_mem(docId: ,),
-//     ),
-//   );
-// }
+import 'bookclub_rule.dart';
+
+import 'read_page.dart';
 
 class Lobby_mem extends StatefulWidget {
   const Lobby_mem({
@@ -35,7 +23,7 @@ class Lobby_mem extends StatefulWidget {
     required this.docId,
   }) : super(key: key);
 
-  final String docId;
+  final String? docId;
 
   @override
   State<Lobby_mem> createState() => _Lobby_memState();
@@ -43,29 +31,6 @@ class Lobby_mem extends StatefulWidget {
 
 class _Lobby_memState extends State<Lobby_mem> {
   String date = '목표달성일을\n설정해보세요    ';
-
-  TextEditingController pageController = TextEditingController();
-  TextEditingController _todayController = TextEditingController();
-
-  @override
-  // void initState() {
-  //   // 왜 restart하면 안되지??
-  //   WidgetsBinding.instance?.addPostFrameCallback(
-  //     (_) async {
-  //       pageController.text =
-  //           await Provider.of<ClubService>(context, listen: false)
-  //               .gettotalpages(widget.docId);
-  //       print(pageController.text);
-  //     },
-  //   );
-  //   WidgetsBinding.instance?.addPostFrameCallback(
-  //     (_) async {
-  //       _todayController.text =
-  //           await Provider.of<ClubService>(context).gettodaypages(widget.docId);
-  //     },
-  //   );
-  //   super.initState();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +54,7 @@ class _Lobby_memState extends State<Lobby_mem> {
                 final doc = docs?[0];
 
                 String inviteCode = doc?.get('docId');
-
+                DateTime club_date = DateTime.parse(doc?.get('goal_date'));
                 return GestureDetector(
                   onTap: () => FocusScope.of(context).unfocus(),
                   child: Scaffold(
@@ -192,17 +157,15 @@ class _Lobby_memState extends State<Lobby_mem> {
                                     ),
                                     Spacer(),
                                     Text(
-                                      doc?['goal_date'],
+                                      doc?.get('goal_date'),
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,
                                       ),
                                     ),
-                                    Icon(
-                                      Icons.arrow_forward_ios,
-                                      color: Colors.white54,
-                                      size: 20,
-                                    )
+                                    SizedBox(
+                                      width: 30,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -429,7 +392,11 @@ class _Lobby_memState extends State<Lobby_mem> {
                                           top: 30,
                                         ),
                                         child: Text(
-                                          '25일',
+                                          club_date
+                                                  .difference(DateTime.now())
+                                                  .inDays
+                                                  .toString() +
+                                              "일",
                                           style: TextStyle(
                                             color: Colors.red,
                                             fontSize: 30,
@@ -475,14 +442,21 @@ class _Lobby_memState extends State<Lobby_mem> {
                                           left: 20.0,
                                           top: 30,
                                         ),
-                                        child: Text(
-                                          '117명',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 30,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                                        child: FutureBuilder(
+                                            future: clubService
+                                                .getCount(inviteCode),
+                                            builder: (context, snapshot) {
+                                              print(
+                                                  'snapshot data:${snapshot.data}');
+                                              return Text(
+                                                snapshot.data.toString() + "명",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 30,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            }),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.only(

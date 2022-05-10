@@ -55,15 +55,18 @@ class ClubService extends ChangeNotifier {
     });
   }
 
-  // final membersCollection = FirebaseFirestore.instance.collection('clubs').doc();
-  String docId = '';
-  String userid = '';
+  //책 제목 update
+  updatebookname(String docId, String bookname) async {
+    await ClubCollection.doc(docId).update({
+      'bookname': bookname,
+    });
+  }
 
   getClub(String clubId) async {
     // 단하나의 스냅샷 조회
     DocumentSnapshot<Map<String, dynamic>> snapshot =
         await ClubCollection.doc(clubId).get();
-    print(snapshot.data());
+
     // 컬렉션의 스냅샷 리스트 조회
     QuerySnapshot<Map<String, dynamic>> snapshot2 =
         await ClubCollection.doc(clubId)
@@ -136,8 +139,6 @@ class ClubService extends ChangeNotifier {
       'total_pages': totalpages,
       'today_goal': todaygoal,
     });
-    docId = ref.id;
-    print('document Id is recorded ${docId}');
 
     return ref.id;
   }
@@ -151,7 +152,7 @@ class ClubService extends ChangeNotifier {
       'uid': uid,
       'readpages': '0',
     });
-    userid = uid;
+
     notifyListeners();
   }
 
@@ -234,7 +235,36 @@ class ClubService extends ChangeNotifier {
   }
 //코드 치고 들어갔을 때, members에 추가
 
+  Future getCount(String? docId) async => FirebaseFirestore.instance
+          .collection("Book")
+          .doc(docId)
+          .collection("members") //your collectionref
+          .get()
+          .then((value) {
+        var count = 0;
+        count = value.docs.length;
+        print(value);
+        return count;
+      });
+  void create(int readingpagenum, String uid) async {
+    // post 작성하기
+    await ClubCollection.add({
+      // 유저 식별자
+      'reading_pagenum': readingpagenum, // page num
+    });
+    notifyListeners(); // 화면 갱신
+  }
+
+  Future<dynamic> getreadpages(String docId) async {
+    DocumentSnapshot<Map<String, dynamic>> snapshot =
+        await ClubCollection.doc(docId).get();
+    print(snapshot.data());
+    return snapshot.data()?['total_pages'];
+  }
 }
+
+
+
 
 ///
 /// 모든 유저를 담는 컬랙션.

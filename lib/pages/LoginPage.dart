@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:booknoejilju/pages/Lobby_members.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,19 +12,7 @@ import '../services/auth_service.dart';
 import '../services/bookclub_service.dart';
 import 'Entrance.dart';
 import 'Lobby.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // main 함수에서 async 사용하기 위함
-  await Firebase.initializeApp(); // firebase 앱 시작
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => AuthService()),
-      ],
-      child: const LoginPage(),
-    ),
-  );
-}
+import 'Splash.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -51,43 +38,51 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 children: [
                   Container(
-                    height: 100.0,
+                    height: 30.0,
                     width: 500.0,
                     color: Colors.black,
                   ),
-                  Container(
-                    child: Image.asset('lib/images/Splash_Character.png'),
-                    height: 100.0,
-                    width: 400.0,
+                  Stack(
+                    children: [
+                      Container(
+                        alignment: Alignment.center,
+                        child: Image.asset(
+                          'lib/images/run.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 25,
+                        left: 90,
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: Image.asset(
+                            'lib/images/logo.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 10.0,
+                        width: 500.0,
+                        color: Colors.black,
+                      ),
+                      Positioned(
+                        top: 100,
+                        left: 120,
+                        child: Text(
+                          '피드로 함께하는 독서 레이싱',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ),
                   Container(
-                    height: 20.0,
-                    width: 500.0,
-                    color: Colors.black,
-                  ),
-                  Text(
-                    '북노의 질주',
-                    style: TextStyle(
-                        fontFamilyFallback: ['CookieRun'],
-                        fontSize: 48.0,
-                        color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                  Container(
-                    height: 12.0,
-                    width: 500.0,
-                    color: Colors.black,
-                  ),
-                  Text(
-                    '피드로 함께하는 독서 레이싱',
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  Container(
-                    height: 12.0,
+                    height: 10.0,
                     width: 500.0,
                     color: Colors.black,
                   ),
@@ -143,51 +138,58 @@ class _LoginPageState extends State<LoginPage> {
                           // print(user?.uid);
                           // print(authService.currentUser()?.uid);
 
-                          QuerySnapshot<Map<String, dynamic>> data =
-                              await clubService.UserCollection.where('uid',
-                                      isEqualTo: authService.currentUser()?.uid)
-                                  .get();
-                          String userdocId = data.docs[0]['docId'];
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SplashPage(),
+                            ),
+                          );
 
-                          DocumentSnapshot<Map<String, dynamic>>
-                              documentsnapshot =
-                              await clubService.ClubCollection.doc(userdocId)
-                                  .get();
-                          print(documentsnapshot.data()?['leader']);
+                          // QuerySnapshot<Map<String, dynamic>> data =
+                          //     await clubService.UserCollection.where('uid',
+                          //             isEqualTo: authService.currentUser()?.uid)
+                          //         .get();
+                          // String userdocId = data.docs[0]['docId'];
 
-                          // DocumentReference<Map<String, dynamic>> ref =
-                          //     clubService.ClubCollection.doc(userdocId);
-                          // inspect(ref);
-                          if (userdocId != 'unavailable') {
-                            if (documentsnapshot.data()?['leader'] ==
-                                authService.currentUser()?.uid) {
-                              Navigator.pushReplacement(
-                                //push replacement는 전 context를 지움
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => LobbyPage(),
-                                ),
-                              );
-                            } else {
-                              Navigator.pushReplacement(
-                                //push replacement는 전 context를 지움
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => Lobby_mem(
-                                    docId: userdocId,
-                                  ),
-                                ),
-                              );
-                            }
-                          } else {
-                            Navigator.pushReplacement(
-                              //push replacement는 전 context를 지움
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EntrancePage(),
-                              ),
-                            );
-                          }
+                          // DocumentSnapshot<Map<String, dynamic>>
+                          //     documentsnapshot =
+                          //     await clubService.ClubCollection.doc(userdocId)
+                          //         .get();
+                          // print(documentsnapshot.data()?['leader']);
+
+                          // // DocumentReference<Map<String, dynamic>> ref =
+                          // //     clubService.ClubCollection.doc(userdocId);
+                          // // inspect(ref);
+                          // if (userdocId != 'unavailable') {
+                          //   if (documentsnapshot.data()?['leader'] ==
+                          //       authService.currentUser()?.uid) {
+                          //     Navigator.pushReplacement(
+                          //       //push replacement는 전 context를 지움
+                          //       context,
+                          //       MaterialPageRoute(
+                          //         builder: (context) => LobbyPage(),
+                          //       ),
+                          //     );
+                          //   } else {
+                          //     Navigator.pushReplacement(
+                          //       //push replacement는 전 context를 지움
+                          //       context,
+                          //       MaterialPageRoute(
+                          //         builder: (context) => Lobby_mem(
+                          //           docId: userdocId,
+                          //         ),
+                          //       ),
+                          //     );
+                          //   }
+                          // } else {
+                          //   Navigator.pushReplacement(
+                          //     //push replacement는 전 context를 지움
+                          //     context,
+                          //     MaterialPageRoute(
+                          //       builder: (context) => EntrancePage(),
+                          //     ),
+                          //   );
+                          // }
 
                           // 로그인 성공
                           // if(clubService.UserCollection.where('uid', isEqualTo: user?.uid).get() != 'unavailable' ) {

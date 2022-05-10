@@ -1,13 +1,16 @@
 import 'dart:async';
 
-import 'package:booknoejilju/services/bookclub_service.dart';
+import 'package:booknoejilju/pages/Writing.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'Writing.dart';
-import '../services/book_service.dart';
+import '../services/auth_service.dart';
+import '../services/bookclub_service.dart';
+import 'Lobby.dart';
 
 class ReadPage extends StatefulWidget {
   const ReadPage({Key? key}) : super(key: key);
@@ -26,123 +29,118 @@ class ReadPageState extends State<ReadPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = context.read<AuthService>();
+    final user = authService.currentUser()!;
     return Consumer<ClubService>(
       builder: (context, clubService, child) {
         return Scaffold(
-          // appBar: AppBar(
-          //   centerTitle: true,
-          //   title: Text(
-          //     '독서',
-          //     style: TextStyle(
-          //       color: Colors.white,
-          //     ),
-          //   ),
-          //   backgroundColor: Colors.black87,
-          //   actions: [
-          //     Padding(
-          //       padding: const EdgeInsets.all(8.0),
-          //       child: IconButton(
-          //         icon: Icon(CupertinoIcons.bell),
-          //         onPressed: () {},
-          //       ),
-          //     ),
-          //   ],
-          // ),
-          drawer: Drawer(
-            backgroundColor: Colors.black.withAlpha(220),
-            child: ListView(
-              children: [
-                SizedBox(
-                  height: 10,
+          appBar: AppBar(
+            backgroundColor: Colors.black87,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: IconButton(
+                  icon: Icon(CupertinoIcons.bell),
+                  onPressed: () {},
                 ),
-                ListTile(
-                  title: Row(
-                    children: [
-                      Icon(
-                        Icons.article_outlined,
-                        color: Colors.white70,
-                      ),
-                      Text(
-                        '   나만의 메모장',
-                        style: TextStyle(
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                ListTile(
-                  title: Row(
-                    children: [
-                      Icon(
-                        Icons.chat_outlined,
-                        color: Colors.white70,
-                      ),
-                      Text(
-                        '   커뮤니티',
-                        style: TextStyle(
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                ListTile(
-                  title: Row(
-                    children: [
-                      Icon(
-                        Icons.create_outlined,
-                        color: Colors.white70,
-                      ),
-                      Text(
-                        '   글쓰기',
-                        style: TextStyle(
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                ListTile(
-                  title: Row(
-                    children: [
-                      Icon(
-                        Icons.undo_outlined,
-                        color: Colors.white70,
-                      ),
-                      Text(
-                        '   광장으로 돌아가기',
-                        style: TextStyle(
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+          // drawer: Drawer(
+          //   backgroundColor: Colors.black.withAlpha(220),
+          //   child: ListView(
+          //     children: [
+          //       SizedBox(
+          //         height: 10,
+          //       ),
+          //       ListTile(
+          //         title: Row(
+          //           children: [
+          //             Icon(
+          //               Icons.article_outlined,
+          //               color: Colors.white70,
+          //             ),
+          //             Text(
+          //               '   나만의 메모장',
+          //               style: TextStyle(
+          //                 color: Colors.white70,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //         onTap: () {
+          //           Navigator.pop(context);
+          //         },
+          //       ),
+          //       SizedBox(
+          //         height: 10,
+          //       ),
+          //       ListTile(
+          //         title: Row(
+          //           children: [
+          //             Icon(
+          //               Icons.chat_outlined,
+          //               color: Colors.white70,
+          //             ),
+          //             Text(
+          //               '   커뮤니티',
+          //               style: TextStyle(
+          //                 color: Colors.white70,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //         onTap: () {
+          //           Navigator.pop(context);
+          //         },
+          //       ),
+          //       SizedBox(
+          //         height: 10,
+          //       ),
+          //       ListTile(
+          //         title: Row(
+          //           children: [
+          //             Icon(
+          //               Icons.create_outlined,
+          //               color: Colors.white70,
+          //             ),
+          //             Text(
+          //               '   글쓰기',
+          //               style: TextStyle(
+          //                 color: Colors.white70,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //         onTap: () {
+          //           Navigator.pop(context);
+          //         },
+          //       ),
+          //       SizedBox(
+          //         height: 10,
+          //       ),
+          //       ListTile(
+          //         title: Row(
+          //           children: [
+          //             Icon(
+          //               Icons.undo_outlined,
+          //               color: Colors.white70,
+          //             ),
+          //             Text(
+          //               '   광장으로 돌아가기',
+          //               style: TextStyle(
+          //                 color: Colors.white70,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //         onTap: () {
+          //           Navigator.pop(context);
+          //         },
+          //       ),
+          //     ],
+          //   ),
+          // ),
           body: Stack(
             children: [
               CustomScrollView(
@@ -178,18 +176,18 @@ class ReadPageState extends State<ReadPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    currentPage = currentPage - 1;
-                                  });
-                                },
-                                icon: Icon(
-                                  Icons.expand_more,
-                                  color: Colors.white70,
-                                  size: 60,
-                                ),
-                              ),
+                              //      IconButton(
+                              //        onPressed: () {
+                              //           setState(() {
+                              //            currentPage = currentPage - 1;
+                              //           });
+                              //         },
+                              //        icon: Icon(
+                              //           Icons.expand_more,
+                              //           color: Colors.white70,
+                              //         size: 60,
+                              //        ),
+                              //     ),
                               SizedBox(
                                 width: 30,
                               ),
@@ -201,24 +199,26 @@ class ReadPageState extends State<ReadPage> {
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(10)),
                                 ),
-                                child: Center(
-                                  child: RichText(
-                                      text: TextSpan(children: [
-                                    TextSpan(
-                                      text: '$currentPage',
-                                      style: TextStyle(
-                                        fontSize: 38,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text: '  p',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  ])),
+                                child: TextFormField(
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 38),
+                                  decoration: InputDecoration(
+                                    fillColor: Colors.white,
+                                    focusedBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.red),
+                                    ),
+                                    labelText: '현재 페이지',
+                                    labelStyle: TextStyle(
+                                        color: Colors.grey, fontSize: 15),
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                ' p ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
                                 ),
                               ),
                               SizedBox(
@@ -230,48 +230,82 @@ class ReadPageState extends State<ReadPage> {
                                     height: 30,
                                   ),
                                   Text(
-                                    ' / 150p',
+                                    ' / ',
                                     style: TextStyle(
                                       color: Colors.white,
+                                      fontSize: 60,
                                     ),
                                   ),
                                 ],
                               ),
-                              IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    currentPage = currentPage + 1;
-                                  });
-                                },
-                                icon: Icon(
-                                  Icons.expand_less,
-                                  color: Colors.white70,
-                                  size: 60,
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  color: Colors.black87,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10)),
+                                ),
+                                child: Center(
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: "TBD", //로비페이지의 전체 쪽수가져오기//
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                          ),
+                                          children: [
+                                            TextSpan(
+                                              text: '  p',
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
+                              //   IconButton(
+                              //     onPressed: () {
+                              //       setState(() {
+                              //         currentPage = currentPage + 1;
+                              //       });
+                              //     },
+                              //     icon: Icon(
+                              //       Icons.expand_less,
+                              //        color: Colors.white70,
+                              //       size: 60,
+                              //     ),
+                              //   ),
                             ],
                           ),
                           SizedBox(
                             height: 10,
                           ),
-                          Container(
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            height: 50,
-                            child: Center(
-                              child: Text(
-                                '현재 페이지까지 질주 피드들을 확인해보세요!',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.red,
+                          Column(children: [
+                            Container(
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              height: 50,
+                              child: Center(
+                                child: Text(
+                                  '현재 페이지까지 질주 피드들을 확인해보세요!',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.red,
+                                  ),
                                 ),
                               ),
+                              decoration: BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10)),
+                                border: Border.all(color: Colors.red, width: 2),
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10)),
-                              border: Border.all(color: Colors.red, width: 2),
-                            ),
-                          ),
+                          ]),
                           SizedBox(
                             height: 10,
                           ),
@@ -455,7 +489,7 @@ class ReadPageState extends State<ReadPage> {
                   ),
                   child: IconButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => WritingPage()),
                       );
