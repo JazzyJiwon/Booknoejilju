@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:booknoejilju/pages/Splash.dart';
 import 'package:booknoejilju/services/auth_service.dart';
 import 'package:booknoejilju/services/bookclub_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -60,12 +61,12 @@ class _CreateClubState extends State<CreateClub> {
                   onPressed: () async {
                     final id = clubService.create_club(
                       _clubname.text,
-                      'bookname',
+                      '',
                       user.uid,
                       'clubrule',
                       '목표달성일을\n설정해보세요    ',
-                      'totalpages',
-                      'todaygoal',
+                      '1',
+                      '',
                     );
                     clubService.createmembers(
                       user.uid,
@@ -80,9 +81,16 @@ class _CreateClubState extends State<CreateClub> {
                     authService.docId = await id;
 
                     authService.todaygoal = '페이지 입력';
-                    authService.totalpage = '페이지 입력';
+                    authService.totalpage = '1';
                     authService.uid = user.uid;
+                    authService.readpage = '0';
+                    DocumentSnapshot<Map<String, dynamic>> snapshot =
+                        await clubService.ClubCollection.doc(authService.docId)
+                            .get();
+                    authService.leader = snapshot.data()?['leader'];
 
+                    authService.rank = await clubService.get_my_rank(
+                        authService.docId, user.uid);
                     // LobbyPage로 이동
                     Navigator.pushReplacement(
                       context,

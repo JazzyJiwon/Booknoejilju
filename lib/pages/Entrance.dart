@@ -2,14 +2,11 @@ import 'package:booknoejilju/pages/Lobby_members.dart';
 import 'package:booknoejilju/pages/create_club.dart';
 import 'package:booknoejilju/services/auth_service.dart';
 import 'package:booknoejilju/services/bookclub_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'Lobby.dart';
-
-void main() {
-  runApp(EntrancePage());
-}
 
 class EntrancePage extends StatelessWidget {
   const EntrancePage({Key? key}) : super(key: key);
@@ -65,7 +62,7 @@ class EntrancePage extends StatelessWidget {
                       ElevatedButton.icon(
                         onPressed: () {
                           // LobbyPage로 이동
-                          Navigator.pushReplacement(
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => CreateClub(),
@@ -107,15 +104,13 @@ class EntrancePage extends StatelessWidget {
                         children: [
                           Container(
                             width: 200.0,
-                            child: Expanded(
-                              child: TextField(
-                                controller: _codecontroller,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: "영문,숫자 9자리 조합",
-                                  labelStyle: TextStyle(color: Colors.grey),
-                                ),
+                            child: TextField(
+                              controller: _codecontroller,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText: "영문,숫자 9자리 조합",
+                                labelStyle: TextStyle(color: Colors.grey),
                               ),
                             ),
                           ),
@@ -139,7 +134,39 @@ class EntrancePage extends StatelessWidget {
 
                                 clubService.createmembers(
                                     user.uid, _codecontroller.text);
-                                Navigator.push(
+
+                                clubService.read_page_update(user.uid,
+                                    _codecontroller.text as String, '0');
+
+                                DocumentSnapshot<Map<String, dynamic>> docsnap =
+                                    await clubService.ClubCollection.doc(
+                                            _codecontroller.text)
+                                        .get();
+
+                                //splash에서 null인 authservice의 변수들 지정
+                                authService.totalpage =
+                                    docsnap.data()?['total_pages'];
+                                authService.readpage = docsnap
+                                    .data()?['member_readpages'][user.uid];
+
+                                authService.docId = _codecontroller.text;
+                                authService.goaldate =
+                                    docsnap.data()?['goal_date'];
+                                authService.todaygoal =
+                                    docsnap.data()?['today_goal'];
+
+                                authService.bookname =
+                                    docsnap.data()?['bookname'];
+                                authService.leader = docsnap.data()?['leader'];
+
+                                // authService.rank = ;
+                                Provider.of<AuthService>(context, listen: false)
+                                    .rank = await Provider.of<ClubService>(
+                                        context,
+                                        listen: false)
+                                    .get_my_rank(authService.docId, user.uid);
+
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>

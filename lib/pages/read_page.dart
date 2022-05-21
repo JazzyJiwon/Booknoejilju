@@ -1,16 +1,16 @@
 import 'dart:async';
-
-import 'package:booknoejilju/pages/Writing.dart';
+import 'dart:developer';
+import 'package:booknoejilju/pages/Lobby_members.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-
 import '../services/auth_service.dart';
 import '../services/bookclub_service.dart';
 import 'Lobby.dart';
+import 'Writing.dart';
 
 class ReadPage extends StatefulWidget {
   const ReadPage({Key? key}) : super(key: key);
@@ -20,21 +20,120 @@ class ReadPage extends StatefulWidget {
 }
 
 class ReadPageState extends State<ReadPage> {
+  @override
+  void initState() {
+    if ((Provider.of<AuthService>(context, listen: false).readpage) != null) {
+      pageController.text =
+          Provider.of<AuthService>(context, listen: false).readpage as String;
+    }
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    inviteCode =
+        Provider.of<AuthService>(context, listen: false).docId as String;
+
+    if ((Provider.of<AuthService>(context, listen: false).readpage) != null) {
+      pageController.text =
+          Provider.of<AuthService>(context, listen: false).readpage as String;
+    }
+
+    super.didChangeDependencies();
+  }
+
   int currentIndex = 0;
   int currentPage = 0;
 
   final _items = ['전체 피드', '내 비밀 피드'];
   var _selected = '전체 피드';
   List _valueList = ['전체 피드'];
+  bool is_private = true;
+  final scrollController = ScrollController();
 
-  @override
+  String inviteCode = '';
+
+  TextEditingController pageController = TextEditingController();
+
   Widget build(BuildContext context) {
     final authService = context.read<AuthService>();
     final user = authService.currentUser()!;
+    final docID = authService.docId;
+
+    String? pages = authService.totalpage as String;
+
     return Consumer<ClubService>(
       builder: (context, clubService, child) {
         return Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(CupertinoIcons.chevron_back, color: Colors.white),
+              onPressed: () => showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    backgroundColor: Colors.grey[850],
+                    title: const Text('현재 페이지 입력은 완료하셨나요?',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                        textAlign: TextAlign.center),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          '이어서 보기',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          authService.readpage = pageController.text;
+                          clubService.read_page_update(
+                            user.uid,
+                            authService.docId as String,
+                            authService.readpage as String,
+                          );
+
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                          if (user.uid == authService.leader) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: ((context) => LobbyPage()),
+                              ),
+                            );
+                          } else {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: ((context) => Lobby_mem(
+                                      docId: docID,
+                                    )),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text(
+                          '저장하고 나가기',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
             backgroundColor: Colors.black87,
             actions: [
               Padding(
@@ -46,105 +145,11 @@ class ReadPageState extends State<ReadPage> {
               ),
             ],
           ),
-          // drawer: Drawer(
-          //   backgroundColor: Colors.black.withAlpha(220),
-          //   child: ListView(
-          //     children: [
-          //       SizedBox(
-          //         height: 10,
-          //       ),
-          //       ListTile(
-          //         title: Row(
-          //           children: [
-          //             Icon(
-          //               Icons.article_outlined,
-          //               color: Colors.white70,
-          //             ),
-          //             Text(
-          //               '   나만의 메모장',
-          //               style: TextStyle(
-          //                 color: Colors.white70,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //         onTap: () {
-          //           Navigator.pop(context);
-          //         },
-          //       ),
-          //       SizedBox(
-          //         height: 10,
-          //       ),
-          //       ListTile(
-          //         title: Row(
-          //           children: [
-          //             Icon(
-          //               Icons.chat_outlined,
-          //               color: Colors.white70,
-          //             ),
-          //             Text(
-          //               '   커뮤니티',
-          //               style: TextStyle(
-          //                 color: Colors.white70,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //         onTap: () {
-          //           Navigator.pop(context);
-          //         },
-          //       ),
-          //       SizedBox(
-          //         height: 10,
-          //       ),
-          //       ListTile(
-          //         title: Row(
-          //           children: [
-          //             Icon(
-          //               Icons.create_outlined,
-          //               color: Colors.white70,
-          //             ),
-          //             Text(
-          //               '   글쓰기',
-          //               style: TextStyle(
-          //                 color: Colors.white70,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //         onTap: () {
-          //           Navigator.pop(context);
-          //         },
-          //       ),
-          //       SizedBox(
-          //         height: 10,
-          //       ),
-          //       ListTile(
-          //         title: Row(
-          //           children: [
-          //             Icon(
-          //               Icons.undo_outlined,
-          //               color: Colors.white70,
-          //             ),
-          //             Text(
-          //               '   광장으로 돌아가기',
-          //               style: TextStyle(
-          //                 color: Colors.white70,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //         onTap: () {
-          //           Navigator.pop(context);
-          //         },
-          //       ),
-          //     ],
-          //   ),
-          // ),
           body: Stack(
             children: [
               CustomScrollView(
-                physics: ScrollPhysics(),
+                shrinkWrap: true,
+                controller: scrollController,
                 slivers: [
                   SliverAppBar(
                     floating: true,
@@ -170,24 +175,12 @@ class ReadPageState extends State<ReadPage> {
                       ),
                     ),
                     bottom: PreferredSize(
-                      preferredSize: Size.fromHeight(200),
+                      preferredSize: Size.fromHeight(220),
                       child: Column(
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              //      IconButton(
-                              //        onPressed: () {
-                              //           setState(() {
-                              //            currentPage = currentPage - 1;
-                              //           });
-                              //         },
-                              //        icon: Icon(
-                              //           Icons.expand_more,
-                              //           color: Colors.white70,
-                              //         size: 60,
-                              //        ),
-                              //     ),
                               SizedBox(
                                 width: 30,
                               ),
@@ -200,13 +193,32 @@ class ReadPageState extends State<ReadPage> {
                                       BorderRadius.all(Radius.circular(10)),
                                 ),
                                 child: TextFormField(
+                                  onEditingComplete: () async {
+                                    clubService.read_page_update(
+                                      user.uid,
+                                      authService.docId as String,
+                                      pageController.text,
+                                    );
+
+                                    authService.rank = await clubService
+                                        .get_my_rank(docID, user.uid);
+
+                                    Provider.of<AuthService>(context,
+                                            listen: false)
+                                        .readpage = pageController.text;
+                                  },
+                                  controller: pageController,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 38),
+                                    color: Colors.white,
+                                    fontSize: 38,
+                                  ),
                                   decoration: InputDecoration(
                                     fillColor: Colors.white,
                                     focusedBorder: UnderlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.red),
+                                      borderSide: BorderSide(
+                                        color: Colors.red,
+                                      ),
                                     ),
                                     labelText: '현재 페이지',
                                     labelStyle: TextStyle(
@@ -251,7 +263,7 @@ class ReadPageState extends State<ReadPage> {
                                     text: TextSpan(
                                       children: [
                                         TextSpan(
-                                          text: "TBD", //로비페이지의 전체 쪽수가져오기//
+                                          text: pages, //로비페이지의 전체 쪽수가져오기//
                                           style: TextStyle(
                                             fontSize: 20,
                                           ),
@@ -269,18 +281,6 @@ class ReadPageState extends State<ReadPage> {
                                   ),
                                 ),
                               ),
-                              //   IconButton(
-                              //     onPressed: () {
-                              //       setState(() {
-                              //         currentPage = currentPage + 1;
-                              //       });
-                              //     },
-                              //     icon: Icon(
-                              //       Icons.expand_less,
-                              //        color: Colors.white70,
-                              //       size: 60,
-                              //     ),
-                              //   ),
                             ],
                           ),
                           SizedBox(
@@ -315,324 +315,298 @@ class ReadPageState extends State<ReadPage> {
                                 width: 20,
                               ),
                               DropdownButton(
-                                  value: _selected,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                  ),
-                                  dropdownColor: Colors.grey.shade700,
-                                  underline: DropdownButtonHideUnderline(
-                                      child: Container()),
-                                  items: _items
-                                      .map(
-                                        (value) => DropdownMenuItem(
-                                          child: Text(
-                                            value,
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                decorationColor: Colors.white),
+                                value: _selected,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                ),
+                                dropdownColor: Colors.grey.shade700,
+                                underline: DropdownButtonHideUnderline(
+                                    child: Container()),
+                                items: _items
+                                    .map(
+                                      (value) => DropdownMenuItem(
+                                        child: Text(
+                                          value,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            decorationColor: Colors.white,
                                           ),
-                                          value: value,
                                         ),
-                                      )
-                                      .toList(),
-                                  onChanged: (value) {
-                                    setState(() {
+                                        value: value,
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(
+                                    () {
                                       _selected = value as String;
-                                    });
-                                  })
+                                      if (value == '전체 피드') {
+                                        is_private = true;
+                                      } else if (value == '내 비밀 피드') {
+                                        is_private = false;
+                                      }
+                                    },
+                                  );
+                                },
+                              )
                             ],
                           )
                         ],
                       ),
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Container(
-                      child: ListView.builder(
-                        physics: ScrollPhysics(),
-                        itemBuilder: (BuildContext, index) {
-                          return Container(
-                            width: double.infinity,
-                            height: 90,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      "24p",
-                                      style: TextStyle(
-                                          fontSize: 17, color: Colors.blue),
-                                    ),
-                                    SizedBox(
-                                      width: 15,
-                                    ),
-                                    Container(
-                                      child: Center(
-                                        child: Text(
-                                          '내 공개 피드',
-                                          style: TextStyle(
-                                              color: Colors.red, fontSize: 13),
-                                        ),
+                  is_private
+                      ? FutureBuilder<
+                              List<
+                                  QueryDocumentSnapshot<Map<String, dynamic>>>>(
+                          future: clubService.readpost(
+                              docID as String, authService.readpage as String),
+                          builder: (context, snapshot) {
+                            final posts = snapshot.data ?? [];
+                            return SliverToBoxAdapter(
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: posts.length.toDouble() * 90,
+                                child: ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: posts.length,
+                                  itemBuilder: (context, index) {
+                                    final post = posts[index];
+                                    String? pagenum = post.get('page');
+                                    String? content = post.get('post');
+                                    bool? isPrivate = post.get('isPrivate');
+
+                                    return Container(
+                                      width: double.infinity,
+                                      height: 90,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text(
+                                                pagenum as String,
+                                                style: TextStyle(
+                                                  fontSize: 17,
+                                                  color: Colors.blue,
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: 15,
+                                              ),
+                                              Container(
+                                                child: Center(
+                                                  child: isPrivate ?? false
+                                                      ? Text(
+                                                          '비밀 피드',
+                                                          style: TextStyle(
+                                                              color: Colors.red,
+                                                              fontSize: 13),
+                                                        )
+                                                      : Text(
+                                                          '공개 피드',
+                                                          style: TextStyle(
+                                                              color: Colors.red,
+                                                              fontSize: 13),
+                                                        ),
+                                                ),
+                                                width: 80,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                    Radius.circular(
+                                                      5,
+                                                    ),
+                                                  ),
+                                                  border: Border.all(
+                                                    width: 1,
+                                                    color: Colors.red,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Text(
+                                            content!,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                '00/00/00',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade700,
+                                                ),
+                                              ),
+                                              Spacer(),
+                                              Icon(
+                                                Icons.thumb_up_alt_outlined,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                              SizedBox(
+                                                width: 20,
+                                              ),
+                                              Divider(
+                                                color: Colors.grey,
+                                                height: 1,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                      width: 80,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.all(Radius.circular(
-                                            5,
-                                          )),
-                                          border: Border.all(
-                                            width: 1,
-                                            color: Colors.red,
-                                          )),
-                                    ),
-                                  ],
+                                    );
+                                  },
                                 ),
-                                SizedBox(
-                                  height: 10,
+                              ),
+                            );
+                          })
+                      : FutureBuilder<
+                              List<
+                                  QueryDocumentSnapshot<Map<String, dynamic>>>>(
+                          future: clubService.readprivatepost(
+                              docID as String, user.uid),
+                          builder: (context, snapshot) {
+                            //불러오는 시간이 걸림..?? 왜 그럴까??
+                            final posts = snapshot.data ?? [];
+                            return SliverToBoxAdapter(
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: posts.length.toDouble() * 90,
+                                child: ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: posts.length,
+                                  itemBuilder: (context, index) {
+                                    final post = posts[index];
+                                    String? pagenum = post.get('page');
+                                    String? content = post.get('post');
+                                    bool? isPrivate = post.get('isPrivate');
+                                    return Container(
+                                      width: double.infinity,
+                                      height: 90,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text(
+                                                pagenum as String,
+                                                style: TextStyle(
+                                                  fontSize: 17,
+                                                  color: Colors.blue,
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: 15,
+                                              ),
+                                              Container(
+                                                child: Center(
+                                                    child: Text(
+                                                  '비밀 피드',
+                                                  style: TextStyle(
+                                                      color: Colors.red,
+                                                      fontSize: 13),
+                                                )),
+                                                width: 80,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                    Radius.circular(
+                                                      5,
+                                                    ),
+                                                  ),
+                                                  border: Border.all(
+                                                    width: 1,
+                                                    color: Colors.red,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Text(
+                                            content!,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                '00/00/00',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade700,
+                                                ),
+                                              ),
+                                              Spacer(),
+                                              Icon(
+                                                Icons.thumb_up_alt_outlined,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                              SizedBox(
+                                                width: 20,
+                                              ),
+                                              Divider(
+                                                color: Colors.grey,
+                                                height: 1,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
                                 ),
-                                Text(
-                                  '3번째 줄 작가님 필력 대박',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Row(
-                                  children: [
-                                    Text('00/00/00'),
-                                    Spacer(),
-                                    Icon(
-                                      Icons.thumb_up_alt_outlined,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                    SizedBox(
-                                      width: 20,
-                                    ),
-                                    Divider(
-                                      color: Colors.grey,
-                                      height: 1,
-                                    ),
-                                  ],
-                                )
-                              ],
-                            ),
-                            // child: ListTile(
-                            //   title: Row(
-                            //     children: [
-                            //       Text(
-                            //         "24p",
-                            //         style: TextStyle(
-                            //             fontSize: 17, color: Colors.blue),
-                            //       ),
-                            //       SizedBox(
-                            //         width: 20,
-                            //       ),
-                            //       Container(
-                            //         child: Center(
-                            //           child: Text(
-                            //             '내 공개 피드',
-                            //             style: TextStyle(
-                            //                 color: Colors.red, fontSize: 13),
-                            //           ),
-                            //         ),
-                            //         width: 80,
-                            //         height: 20,
-                            //         decoration: BoxDecoration(
-                            //             borderRadius:
-                            //                 BorderRadius.all(Radius.circular(
-                            //               5,
-                            //             )),
-                            //             border: Border.all(
-                            //               width: 1,
-                            //               color: Colors.red,
-                            //             )),
-                            //       ),
-                            //     ],
-                            //   ),
-                            //   subtitle: Text(
-                            //     "책이 너무 재미있어요",
-                            //     style: TextStyle(color: Colors.white),
-                            //   ),
-                            //   trailing: Icon(
-                            //     CupertinoIcons.hand_thumbsup,
-                            //     color: Colors.white,
-                            //   ),
-                            // ),
-                          );
-                        },
-                        itemCount: 10,
-                        shrinkWrap: true,
-                        padding: EdgeInsets.all(5),
-                        scrollDirection: Axis.vertical,
-                      ),
-                    ),
-                  ),
+                              ),
+                            );
+                          }),
                 ],
-              ),
-              Positioned(
-                right: 30,
-                bottom: 20,
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(
-                      30,
-                    )),
-                    color: Colors.red,
-                  ),
-                  child: IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => WritingPage()),
-                      );
-                    },
-                    icon: Icon(
-                      CupertinoIcons.pen,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
-
-          // body: Column(
-          //   children: [
-          //     MyBookPetWidget(),
-          //     SizedBox(
-          //       height: 20,
-          //     ),
-
-          // Row(
-          //   crossAxisAlignment: CrossAxisAlignment.center,
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     Padding(
-          //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          //       child: Container(
-          //         width: 70,
-          //         height: 80,
-          //         decoration: BoxDecoration(
-          //           color: Colors.grey,
-          //         ),
-          //       ),
-          //     ),
-          //     Padding(
-          //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          //       child: Container(
-          //         width: 70,
-          //         height: 80,
-          //         decoration: BoxDecoration(
-          //           color: Colors.grey,
-          //         ),
-          //       ),
-          //     ),
-          //     Padding(
-          //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          //       child: Container(
-          //         width: 70,
-          //         height: 80,
-          //         decoration: BoxDecoration(
-          //           color: Colors.grey,
-          //         ),
-          //       ),
-          //     ),
-          //     Padding(
-          //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          //       child: Container(
-          //         width: 70,
-          //         height: 80,
-          //         decoration: BoxDecoration(
-          //           color: Colors.grey,
-          //         ),
-          //       ),
-          //     ),
-          //   ],
-          // ),
-
-          // ],
-          // ),
+          floatingActionButton: Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(
+                30,
+              )),
+              color: Colors.red,
+            ),
+            child: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => WritingPage()),
+                );
+              },
+              icon: Icon(
+                CupertinoIcons.pen,
+                color: Colors.white,
+              ),
+            ),
+          ),
         );
       },
     );
   }
 }
-
-// Tab controller version
-// Column(
-//       crossAxisAlignment: CrossAxisAlignment.stretch,
-//       children: <Widget>[
-//         DefaultTabController(
-//             length: 2, // length of tabs
-//             initialIndex: 0,
-//             child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.stretch,
-//                 children: <Widget>[
-//                   Container(
-//                     color: Colors.black87,
-//                     child: TabBar(
-//                       labelColor: Colors.white,
-//                       unselectedLabelColor: Colors.black,
-//                       tabs: [
-//                         Tab(text: '커뮤니티'),
-//                         Tab(text: '나만의 메모장'),
-//                       ],
-//                     ),
-//                   ),
-//                   Padding(
-//                     padding: EdgeInsets.only(
-//                         top: 16, left: 16, right: 16),
-//                     child: TextField(
-//                       decoration: InputDecoration(
-//                         hintText: "내가 쓴 글보기",
-//                         hintStyle: TextStyle(
-//                             color: Colors.grey.shade600),
-//                         prefixIcon: Icon(
-//                           Icons.search,
-//                           color: Colors.grey.shade600,
-//                           size: 20,
-//                         ),
-//                         filled: true,
-//                         fillColor: Colors.grey.shade100,
-//                         contentPadding: EdgeInsets.all(8),
-//                         enabledBorder: OutlineInputBorder(
-//                             borderRadius:
-//                                 BorderRadius.circular(20),
-//                             borderSide: BorderSide(
-//                                 color: Colors.grey.shade100)),
-//                       ),
-//                     ),
-//                   ),
-//                   ListView.builder(
-//                     itemBuilder: (BuildContext, index) {
-//                       return ListTile(
-//                         leading: CircleAvatar(),
-//                         title: Text(
-//                           "24 p.g.",
-//                           style: TextStyle(color: Colors.white),
-//                         ),
-//                         subtitle: Text("책이 너무 재미있어요",
-//                             style:
-//                                 TextStyle(color: Colors.white)),
-//                         trailing: Icon(
-//                           CupertinoIcons.hand_thumbsup,
-//                           color: Colors.white,
-//                         ),
-//                       );
-//                     },
-//                     itemCount: 10,
-//                     shrinkWrap: true,
-//                     padding: EdgeInsets.all(5),
-//                     scrollDirection: Axis.vertical,
-//                   ),
-//                 ])),
-//       ]),
-// ),

@@ -8,27 +8,16 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/bookclub_service.dart';
 
-class WritingPage extends StatelessWidget {
-  const WritingPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Feed(),
-    );
-  }
-}
-
-class Feed extends StatefulWidget {
-  const Feed({
+class WritingPage extends StatefulWidget {
+  const WritingPage({
     Key? key,
   }) : super(key: key);
 
   @override
-  State<Feed> createState() => _FeedState();
+  State<WritingPage> createState() => _WritingPageState();
 }
 
-class _FeedState extends State<Feed> {
+class _WritingPageState extends State<WritingPage> {
   TextEditingController postController = TextEditingController();
   TextEditingController pageController = TextEditingController();
   bool isSecret = false;
@@ -72,11 +61,8 @@ class _FeedState extends State<Feed> {
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => ReadPage()),
-                            );
+                            Navigator.pop(context);
+                            Navigator.pop(context);
                           },
                           child: Text(
                             "뒤로가기",
@@ -97,11 +83,13 @@ class _FeedState extends State<Feed> {
                 onPressed: () {
                   //포스트 만들기
                   clubService.create_post(
-                      postController.text, user.uid, pageController.text);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => ReadPage()),
+                    postController.text,
+                    user.uid,
+                    pageController.text,
+                    isSecret,
+                    authService.docId as String,
                   );
+                  Navigator.pop(context);
                 },
                 child: Text(
                   '저장',
@@ -142,6 +130,7 @@ class _FeedState extends State<Feed> {
                             labelText: "숫자를 입력해주세요.",
                             labelStyle: TextStyle(color: Colors.grey),
                           ),
+                          keyboardType: TextInputType.number,
                         ),
                       ),
                     ],
@@ -196,7 +185,7 @@ class _FeedState extends State<Feed> {
                   ),
                   TextField(
                     controller: postController,
-                    style: TextStyle(fontSize: 28, color: Colors.white),
+                    style: TextStyle(fontSize: 23, color: Colors.white),
                     decoration: InputDecoration(
                       labelText: "글을 입력해주세요.",
                       labelStyle: TextStyle(fontSize: 16, color: Colors.grey),

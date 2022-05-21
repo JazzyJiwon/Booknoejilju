@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:booknoejilju/pages/bookclub_rule.dart';
-import 'package:booknoejilju/services/book_service.dart';
+import 'package:booknoejilju/pages/fullscreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,7 +28,13 @@ class LobbyPage extends StatefulWidget {
 
 class _LobbyState extends State<LobbyPage> {
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void didChangeDependencies() {
+    /////////////////////////////////////////////////
     pageController.text = Provider.of<AuthService>(context).totalpage as String;
     _todayController.text =
         Provider.of<AuthService>(context).todaygoal as String;
@@ -43,6 +49,8 @@ class _LobbyState extends State<LobbyPage> {
 
     ///
     booknameController.text = Provider.of<AuthService>(context).bookname ?? '';
+    _todayController.text = Provider.of<AuthService>(context).todaygoal ?? '';
+    String? currentrank = Provider.of<AuthService>(context).rank;
 
     super.didChangeDependencies();
   }
@@ -59,12 +67,29 @@ class _LobbyState extends State<LobbyPage> {
 
   Widget build(BuildContext context) {
     final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-    // TextEditingController pageController = TextEditingController();
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     return Consumer<AuthService>(
       builder: (context, authService, child) {
         final authService = context.read<AuthService>();
         final user = authService.currentUser()!;
+        String? currentrank = authService.rank;
+        String? achievement = (int.parse(authService.readpage as String) *
+                100 /
+                int.parse(authService.totalpage as String))
+            .toString();
+
+        if (achievement.length == 1) {
+          achievement = achievement.substring(0, 1);
+        } else if (achievement.length == 2) {
+          achievement = achievement.substring(0, 2);
+        } else if (achievement.length == 3) {
+          achievement = achievement.substring(0, 3);
+        } else {
+          achievement = achievement.substring(0, 3);
+        }
+        //위치 조정 변수 multiple설정
+        var multiple = int.parse(achievement.split(".")[0]);
+        //
         return Consumer<ClubService>(
           builder: (context, clubService, child) {
             return FutureBuilder<QuerySnapshot>(
@@ -117,6 +142,66 @@ class _LobbyState extends State<LobbyPage> {
                     body: SingleChildScrollView(
                       child: Column(
                         children: [
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Container(
+                              child: Center(
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      alignment: Alignment.center,
+                                      child: Image.asset('lib/images/Map.jpg'),
+                                    ),
+                                    Positioned(
+                                      left: 1150 * multiple / 100,
+                                      bottom: 25,
+                                      child: Image.asset(
+                                          'lib/images/Blue_Egg.jpg',
+                                          height: 35,
+                                          width: 35),
+                                    ),
+                                    Positioned(
+                                      left: 25,
+                                      bottom: 15,
+                                      child: Image.asset(
+                                          'lib/images/Red_Egg.jpg',
+                                          height: 35,
+                                          width: 35),
+                                    ),
+                                    Positioned(
+                                      right: 75,
+                                      bottom: 20,
+                                      child: Image.asset(
+                                          'lib/images/Green_Egg.jpg',
+                                          height: 35,
+                                          width: 35),
+                                    ),
+                                    Positioned(
+                                      left: 5,
+                                      top: 5,
+                                      child: IconButton(
+                                        icon: Icon(CupertinoIcons.fullscreen,
+                                            color: Colors.white),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  fullscreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 20,
+                          ),
+
                           SizedBox(
                             height: 20,
                           ),
@@ -217,6 +302,7 @@ class _LobbyState extends State<LobbyPage> {
                                               selected_date = e;
                                               clubService.update_goal_date(
                                                   inviteCode, date as String);
+                                              authService.goaldate = date;
                                             });
                                           },
                                           currentTime: DateTime.now(),
@@ -258,7 +344,7 @@ class _LobbyState extends State<LobbyPage> {
                                 Container(
                                   height: 60,
                                   width:
-                                      MediaQuery.of(context).size.width * 0.48,
+                                      MediaQuery.of(context).size.width * 0.49,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.only(
                                         bottomLeft: Radius.circular(10),
@@ -276,6 +362,7 @@ class _LobbyState extends State<LobbyPage> {
                                           inviteCode,
                                           style: TextStyle(
                                             color: Colors.white,
+                                            fontSize: 13.5,
                                           ),
                                         ),
 
@@ -364,7 +451,7 @@ class _LobbyState extends State<LobbyPage> {
                                           top: 30,
                                         ),
                                         child: Text(
-                                          '6%',
+                                          (achievement as String) + '%',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 30,
@@ -411,7 +498,7 @@ class _LobbyState extends State<LobbyPage> {
                                           top: 30,
                                         ),
                                         child: Text(
-                                          '97등',
+                                          currentrank! + '등',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 30,
@@ -618,9 +705,12 @@ class _LobbyState extends State<LobbyPage> {
                                         child: IconButton(
                                           icon: Icon(CupertinoIcons.pen),
                                           onPressed: () {
+                                            authService.totalpage =
+                                                pageController.text;
                                             clubService.total_page_update(
                                                 inviteCode,
                                                 pageController.text);
+                                            setState(() {});
                                           },
                                           color: Colors.white,
                                           iconSize: 30,
@@ -700,6 +790,8 @@ class _LobbyState extends State<LobbyPage> {
                                           clubService.today_page_update(
                                               inviteCode,
                                               _todayController.text);
+                                          authService.todaygoal =
+                                              _todayController.text;
                                         },
                                         color: Colors.white,
                                         iconSize: 30,

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:developer';
+
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -138,6 +140,7 @@ class ClubService extends ChangeNotifier {
       'goal_date': goaldate,
       'total_pages': totalpages,
       'today_goal': todaygoal,
+      'member_readpages': {leader: '0'},
     });
 
     return ref.id;
@@ -150,9 +153,7 @@ class ClubService extends ChangeNotifier {
   ) async {
     await ClubCollection.doc(docId).collection('members').add({
       'uid': uid,
-      'readpages': '0',
     });
-
     notifyListeners();
   }
 
@@ -178,6 +179,62 @@ class ClubService extends ChangeNotifier {
     notifyListeners();
   }
 
+  void read_page_update(
+    String uid,
+    String docId,
+    String currentpage,
+  ) async {
+    FirebaseFirestore.instance.collection('Book').doc(docId).set({
+      'member_readpages': {uid: currentpage}
+    }, SetOptions(merge: true));
+  }
+
+  Future<String> get_my_rank(
+    String? docId,
+    String? uid,
+  ) async {
+    DocumentSnapshot<Map<String, dynamic>> docusnap =
+        await FirebaseFirestore.instance.collection('Book').doc(docId).get();
+
+    Map member_readpages = docusnap.data()?['member_readpages'];
+
+    String my_readpage = docusnap.data()?['member_readpages'][uid];
+
+    List member_readpages_list = [];
+
+    for (var page in member_readpages.values) {
+      member_readpages_list.add(page);
+    }
+
+    member_readpages_list.sort((b, a) => a.compareTo(b));
+    inspect(member_readpages_list);
+    int my_rank = member_readpages_list.indexOf(my_readpage) + 1;
+
+    return '$my_rank';
+  }
+
+  // CollectionReference<Map<String, dynamic>> member = FirebaseFirestore
+  //     .instance
+  //     .collection('Book')
+  //     .doc(docId)
+  //     .collection('members');
+  // member.get().then(
+  //   (querySnapshot) {
+  //     querySnapshot.docs.forEach(
+  //       (document) {
+  //         if (document.data()['uid'] == uid) {
+  //           ClubCollection.doc(docId)
+  //               .collection('members')
+  //               .doc(document.id)
+  //               .update(
+  //             {'readpages': currentpage},
+  //           );
+  //         }
+  //       },
+  //     );
+  //   },
+  // );
+
 //lobby에서 오늘 목표 업데이트
   void today_page_update(
     String docId,
@@ -192,14 +249,14 @@ class ClubService extends ChangeNotifier {
   Future<dynamic> gettotalpages(String docId) async {
     DocumentSnapshot<Map<String, dynamic>> snapshot =
         await ClubCollection.doc(docId).get();
-    print(snapshot.data());
+
     return snapshot.data()?['total_pages'];
   }
 
   Future<dynamic> gettodaypages(String docId) async {
     DocumentSnapshot<Map<String, dynamic>> snapshot =
         await ClubCollection.doc(docId).get();
-    print(snapshot.data());
+
     return snapshot.data()?['today_goal'];
   }
 
@@ -223,16 +280,58 @@ class ClubService extends ChangeNotifier {
     await ClubCollection.doc(docId).update({'goal_date': goalDate});
   }
 
-  void create_post(String text, String uid, String num) async {
+  void create_post(
+      String text, String uid, String num, bool isSecret, String docId) async {
     // post 작성하기
-    await ClubCollection.add({
+    await ClubCollection.doc(docId).collection('Feed').add({
       'uid': uid, // 유저 식별자
       'post': text, // 포스트 작성
       'page': num, // 페이지 수
-      'isPrivate': false, // 완료 여부
+      'isPrivate': isSecret, // 완료 여부
     });
     notifyListeners(); // 화면 갱신
   }
+
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> readpost(
+      String docID, String currentpage) async {
+    // return ClubCollection.doc(docID).collection('Feed').get();
+    CollectionReference<Map<String, dynamic>> clubCol =
+        ClubCollection.doc(docID).collection('Feed');
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> QueryList = [];
+
+    clubCol.get().then((querySnapshot) {
+      querySnapshot.docs.forEach((document) {
+        if (int.parse(document.data()['page']) <= int.parse(currentpage)) {
+          QueryList.add(document);
+        }
+      });
+    });
+    inspect(QueryList);
+    return QueryList;
+  }
+
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> readprivatepost(
+    String docID,
+    String uid,
+  ) async {
+    CollectionReference<Map<String, dynamic>> snapshot =
+        ClubCollection.doc(docID).collection('Feed');
+
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> QueryList = [];
+
+    snapshot.get().then((querySnapshot) {
+      querySnapshot.docs.forEach((document) {
+        if (document.data()['uid'] == uid) {
+          if (document.data()['isPrivate'] == true) {
+            QueryList.add(document);
+          }
+        }
+      });
+    });
+    inspect(QueryList);
+    return QueryList;
+  }
+
 //코드 치고 들어갔을 때, members에 추가
 
   Future getCount(String? docId) async => FirebaseFirestore.instance
@@ -258,7 +357,7 @@ class ClubService extends ChangeNotifier {
   Future<dynamic> getreadpages(String docId) async {
     DocumentSnapshot<Map<String, dynamic>> snapshot =
         await ClubCollection.doc(docId).get();
-    print(snapshot.data());
+
     return snapshot.data()?['total_pages'];
   }
 }
@@ -272,3 +371,10 @@ class ClubService extends ChangeNotifier {
 ///
 ///
 /// FirebaseStore.instance .reference() .child('users') .child(FirebaseAuth.instance.currentUser?.uid ?? '') .child('currenDocId'); null != => Lobby(); null => Entrance();
+/// 
+/// 
+/// 
+/// 
+/// 
+
+/// 

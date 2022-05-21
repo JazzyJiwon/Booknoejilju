@@ -274,16 +274,16 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    color: Colors.white,
-                    onPressed: () async {
-                      // 로그아웃
-                      print(FirebaseAuth.instance.currentUser?.uid);
-                      await FirebaseAuth.instance.signOut();
-                      print(FirebaseAuth.instance.currentUser?.uid);
-                    },
-                    icon: Icon(Icons.logout_rounded),
-                  ),
+                  // IconButton(
+                  //   color: Colors.white,
+                  //   onPressed: () async {
+                  //     // 로그아웃
+                  //     print(FirebaseAuth.instance.currentUser?.uid);
+                  //     await FirebaseAuth.instance.signOut();
+                  //     print(FirebaseAuth.instance.currentUser?.uid);
+                  //   },
+                  //   icon: Icon(Icons.logout_rounded),
+                  // ),
                 ],
               ),
             ),

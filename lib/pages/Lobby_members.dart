@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:booknoejilju/services/auth_service.dart';
 import 'package:booknoejilju/services/bookclub_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -33,28 +35,60 @@ class _Lobby_memState extends State<Lobby_mem> {
   String date = '목표달성일을\n설정해보세요    ';
 
   @override
+  void didChangeDependencies() {
+    /////////////////////////////////////////////////
+    String? currentrank = Provider.of<AuthService>(context).rank;
+    if (Provider.of<AuthService>(context).goaldate != '목표달성일을\n설정해보세요    ') {
+      DateTime? club_date =
+          DateTime.parse(Provider.of<AuthService>(context).goaldate as String);
+    } else {
+      DateTime? club_date = DateTime.now();
+    }
+    super.didChangeDependencies();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-    // TextEditingController pageController = TextEditingController();
 
     return Consumer<AuthService>(
       builder: (context, authService, child) {
         final authService = context.read<AuthService>();
         final user = authService.currentUser()!;
+        String? currentrank = authService.rank;
+        String? achievement = (int.parse(authService.readpage as String) *
+                100 /
+                int.parse(authService.totalpage as String))
+            .toString();
+
+        if (achievement.length == 1) {
+          achievement = achievement.substring(0, 1);
+        } else if (achievement.length == 2) {
+          achievement = achievement.substring(0, 2);
+        } else if (achievement.length == 3) {
+          achievement = achievement.substring(0, 3);
+        } else {
+          achievement = achievement.substring(0, 3);
+        }
+
         return Consumer<ClubService>(
           builder: (context, clubService, child) {
             return FutureBuilder<QuerySnapshot>(
-              future: clubService.ClubCollection.where('docId',
-                      isEqualTo: widget.docId)
-                  .get(),
+              future: clubService.ClubCollection.where(
+                'docId',
+                isEqualTo: widget.docId,
+              ).get(),
               builder: (context, snapshot) {
                 final docs = snapshot.data?.docs;
 
                 final doc = docs?[0];
 
-                String inviteCode = doc?.get('docId');
-                DateTime club_date = DateTime.parse(doc?.get('goal_date'));
+                String? inviteCode = authService.docId;
+
+                DateTime? club_date = DateTime.now();
+
+                authService.totalpage = doc?['total_pages'];
+
                 return GestureDetector(
                   onTap: () => FocusScope.of(context).unfocus(),
                   child: Scaffold(
@@ -132,7 +166,7 @@ class _Lobby_memState extends State<Lobby_mem> {
                             height: 10,
                           ),
                           Text(
-                            doc?['bookname'],
+                            authService.bookname as String,
                           ),
                           Padding(
                             padding: const EdgeInsets.all(5.0),
@@ -157,7 +191,7 @@ class _Lobby_memState extends State<Lobby_mem> {
                                     ),
                                     Spacer(),
                                     Text(
-                                      doc?.get('goal_date'),
+                                      authService.goaldate as String,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,
@@ -188,7 +222,7 @@ class _Lobby_memState extends State<Lobby_mem> {
                                 Container(
                                   height: 60,
                                   width:
-                                      MediaQuery.of(context).size.width * 0.48,
+                                      MediaQuery.of(context).size.width * 0.49,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.only(
                                         bottomLeft: Radius.circular(10),
@@ -203,9 +237,10 @@ class _Lobby_memState extends State<Lobby_mem> {
                                       children: [
                                         Text(
                                           // 초대 코드 생성.. or 아이디로 초대??
-                                          inviteCode,
+                                          inviteCode as String,
                                           style: TextStyle(
                                             color: Colors.white,
+                                            fontSize: 13.5,
                                           ),
                                         ),
 
@@ -294,7 +329,7 @@ class _Lobby_memState extends State<Lobby_mem> {
                                           top: 30,
                                         ),
                                         child: Text(
-                                          '6%',
+                                          (achievement as String) + '%',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 30,
@@ -341,7 +376,7 @@ class _Lobby_memState extends State<Lobby_mem> {
                                           top: 30,
                                         ),
                                         child: Text(
-                                          '97등',
+                                          currentrank! + '등',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 30,

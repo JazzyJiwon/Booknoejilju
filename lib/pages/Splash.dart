@@ -27,6 +27,7 @@ class _SplashPageState extends State<SplashPage> {
         //uid 저장하기
         Provider.of<AuthService>(context, listen: false).uid =
             Provider.of<AuthService>(context, listen: false).currentUser()?.uid;
+        //initstate에서 활용할 변수로 uid지정하기
         String? currentuid =
             Provider.of<AuthService>(context, listen: false).uid;
 
@@ -55,6 +56,12 @@ class _SplashPageState extends State<SplashPage> {
                 .get();
         String? currentleaderuid = docuref.data()?['leader'];
 
+        Provider.of<AuthService>(context, listen: false).leader =
+            currentleaderuid;
+
+        Provider.of<AuthService>(context, listen: false).readpage =
+            docuref.data()?['member_readpages'][currentuid];
+
         ////page 있는 경우 페이지 불러오기
         Provider.of<AuthService>(context, listen: false).totalpage =
             docuref.data()?['total_pages'];
@@ -76,6 +83,10 @@ class _SplashPageState extends State<SplashPage> {
           );
         } else if (currentdocId != 'unavailable') {
           if (currentuid == currentleaderuid) {
+            Provider.of<AuthService>(context, listen: false).rank =
+                await Provider.of<ClubService>(context, listen: false)
+                    .get_my_rank(currentdocId, currentuid);
+
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -83,6 +94,10 @@ class _SplashPageState extends State<SplashPage> {
               ),
             );
           } else {
+            Provider.of<AuthService>(context, listen: false).rank =
+                await Provider.of<ClubService>(context, listen: false)
+                    .get_my_rank(currentdocId, currentuid);
+
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -100,6 +115,10 @@ class _SplashPageState extends State<SplashPage> {
         }
       },
     );
+
+    Timer(Duration(seconds: 10), () {
+      print('timer finished');
+    });
     super.initState();
   }
 
