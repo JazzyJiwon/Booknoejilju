@@ -75,11 +75,14 @@ class _SplashPageState extends State<SplashPage> {
             docuref.data()?['bookname'];
 
         if (currentuid == null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LoginPage(),
-            ),
+          Timer(
+            Duration(seconds: 3),
+            () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
           );
         } else if (currentdocId != 'unavailable') {
           if (currentuid == currentleaderuid) {
@@ -87,11 +90,14 @@ class _SplashPageState extends State<SplashPage> {
                 await Provider.of<ClubService>(context, listen: false)
                     .get_my_rank(currentdocId, currentuid);
 
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => LobbyPage(),
-              ),
+            Timer(
+              Duration(seconds: 3),
+              () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LobbyPage()),
+                );
+              },
             );
           } else {
             Provider.of<AuthService>(context, listen: false).rank =
@@ -108,17 +114,19 @@ class _SplashPageState extends State<SplashPage> {
             );
           }
         } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => EntrancePage()),
+          Timer(
+            Duration(seconds: 3),
+            () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => EntrancePage()),
+              );
+            },
           );
         }
       },
     );
 
-    Timer(Duration(seconds: 10), () {
-      print('timer finished');
-    });
     super.initState();
   }
 

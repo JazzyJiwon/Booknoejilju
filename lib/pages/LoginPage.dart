@@ -119,6 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                         borderSide: BorderSide(
                           color: Colors.black,
+                          //
                         ),
                       ),
                     ),

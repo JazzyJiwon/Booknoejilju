@@ -19,6 +19,8 @@ class ClubService extends ChangeNotifier {
   final ClubCollection = FirebaseFirestore.instance.collection('Book');
   final UserCollection = FirebaseFirestore.instance.collection('User');
 
+  bool? isPrivate = false;
+
   createuid(String uid) async {
     await UserCollection.add(
       {
@@ -206,7 +208,8 @@ class ClubService extends ChangeNotifier {
       member_readpages_list.add(page);
     }
 
-    member_readpages_list.sort((b, a) => a.compareTo(b));
+    member_readpages_list = List.from(member_readpages_list.reversed);
+    // 왜 갑자기 안먹는거지??
     inspect(member_readpages_list);
     int my_rank = member_readpages_list.indexOf(my_readpage) + 1;
 
@@ -307,6 +310,7 @@ class ClubService extends ChangeNotifier {
       });
     });
     inspect(QueryList);
+
     return QueryList;
   }
 
@@ -329,7 +333,19 @@ class ClubService extends ChangeNotifier {
       });
     });
     inspect(QueryList);
+
     return QueryList;
+  }
+
+  void which_feed(
+    String value,
+  ) {
+    if (value == '전체 피드') {
+      isPrivate = false;
+    } else {
+      isPrivate = true;
+    }
+    notifyListeners();
   }
 
 //코드 치고 들어갔을 때, members에 추가

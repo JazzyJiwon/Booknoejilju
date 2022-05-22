@@ -12,6 +12,10 @@ class AuthService extends ChangeNotifier {
   String? readpage;
   String? rank;
   String? leader;
+  bool? is_private;
+
+  //
+  String? selected = '전체 피드';
 
   User? currentUser() {
     // 현재 유저(로그인 되지 않은 경우 null 반환)
